@@ -1,0 +1,113 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'xyz-ci'
+}
+
+jenkins {
+    remotePath = "http://172.18.240.27:8080/jenkins/job/kantuIdioms_android/"
+    triggerToken = "xyzcitrigger"
+    testApkName = "kanTuldinoms_v6.0.3_2020-11-26-1845_Test.apk"
+}
+
+ding {
+    robotSecret = "SECf28c8dd8dac02e53383b38438d3105eec7067c2163a5ae665c8913df3ea29b63"
+    webHook = "https://oapi.dingtalk.com/robot/send?access_token=ba6f1b938360def36711c535a3750cac4e3035fc07b737ce610fa220d0744231"
+    appName = "序言泽持续集成"
+    apkServerPath = "http://172.18.240.27:8080/jenkins/job/kantuIdioms_android/ws/outapks/"
+    atUser = "18258206050"
+}
+
+def buildLable = ""
+def buildTime = releaseTime()
+def outputApkName = ""
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
+
+    defaultConfig {
+        applicationId "com.supertramp.ciplugin"
+        minSdkVersion 16
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+        flavorDimensions "api", "channel"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    productFlavors {
+        apitest {
+            dimension "api"
+        }
+        apiproduct {
+            dimension "api"
+        }
+        ding {
+            dimension "channel"
+        }
+        other {
+            dimension "channel"
+        }
+    }
+
+    applicationVariants.all { variant ->
+        tasks.all {
+            variant.outputs.all { output ->
+                if ("release" == variant.buildType.name) {
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith("apk")) {
+                        if (outputFile.name.contains("test")) {
+                            buildLable = "${buildTime}_Test"
+                        }
+                        else {
+                            buildLable = "${buildTime}_Product"
+                        }
+                        def name = "${variant.productFlavors[0].name}_v${defaultConfig.versionName}_${buildLable}"
+                        outputApkName = "${name}.apk"
+                        outputFileName = outputApkName
+                        variant.getPackageApplication().outputDirectory = new File("${rootDir}/outapks/")
+                        variant.getPackageApplication().outputScope.apkDatas.forEach {
+                            apkData -> apkData.outputFileName = outputFileName
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+dependencies {
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.3.2'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    //testImplementation 'junit:junit:4.+'
+    //androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    //androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+}
+
+def releaseTime() {
+    return new Date().format("yyyy-MM-dd-HHmm", TimeZone.getTimeZone("Asia/Shanghai"))
+}
