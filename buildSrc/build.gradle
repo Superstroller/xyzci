@@ -6,17 +6,8 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
-        classpath 'com.github.dcendents:android-maven-plugin:1.2'
+        classpath 'com.novoda:bintray-release:0.9.1'
     }
-}
-
-apply plugin : 'kotlin'
-apply plugin : 'maven'
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
 }
 
 repositories {
@@ -24,10 +15,34 @@ repositories {
     jcenter()
 }
 
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+}
+
+apply plugin : 'kotlin'
+apply plugin : 'maven'
+apply plugin : 'com.novoda.bintray-release'
+
+group = 'com.github.Superstroller'
+
+publish {
+    userOrg = 'supertramp229'//用户名
+    groupId = 'com.supertramp.plugin'//jcenter上的路径
+    artifactId = 'xyzci'//项目名称
+    publishVersion = '1.0'//版本号
+    desc = 'Continuous integration plugin for my company\'s projects'
+    website = 'https://github.com/Superstroller/CiPlugin'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    //implementation files('libs/taobao-sdk-java-auto_1479188381469-20201125.jar')
     implementation 'com.squareup.okhttp3:okhttp:3.9.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.android.tools.build:gradle:3.4.1'
@@ -36,9 +51,9 @@ dependencies {
 
 uploadArchives {
     repositories.mavenDeployer {
-        repository(url : uri('../../../repo'))
+        repository(url : uri('../repo'))
         pom.groupId = 'com.supertramp.plugin'
         pom.artifactId = 'xyzci'
-        pom.version = '1.2'
+        pom.version = '1.0'
     }
 }
