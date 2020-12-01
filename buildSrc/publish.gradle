@@ -1,10 +1,10 @@
 apply plugin : 'com.novoda.bintray-release'
 
 publish {
-    userOrg = 'hetingh'//用户名
+    userOrg = 'supertramp229'//用户名
     groupId = 'com.supertramp.plugin'//jcenter上的路径
     artifactId = 'xyzci'//项目名称
-    publishVersion = '1.0'//版本号
+    publishVersion = '1.1'//版本号
     desc = 'Continuous integration plugin for my company\'s projects'//描述
 }
 

@@ -30,7 +30,7 @@ publish {
     userOrg = 'supertramp229'//用户名
     groupId = 'com.supertramp.plugin'//jcenter上的路径
     artifactId = 'xyzci'//项目名称
-    publishVersion = '1.0'//版本号
+    publishVersion = '1.3'//版本号
     desc = 'Continuous integration plugin for my company\'s projects'
     website = 'https://github.com/Superstroller/CiPlugin'
 }
@@ -54,6 +54,6 @@ uploadArchives {
         repository(url : uri('../repo'))
         pom.groupId = 'com.supertramp.plugin'
         pom.artifactId = 'xyzci'
-        pom.version = '1.0'
+        pom.version = '1.3'
     }
 }

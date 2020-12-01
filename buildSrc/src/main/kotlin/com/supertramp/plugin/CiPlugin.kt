@@ -67,15 +67,15 @@ class CiPlugin : Plugin<Project> {
                                 if (output.outputFile != null && output.outputFile.name.endsWith("apk")) {
                                     if (variant.name.contains("test", true)) {
                                         mDingExtension?.testApkName = output.outputFile.name
-                                        writeApkName(output.outputFile.name, true)
+                                        writeApkName(project, output.outputFile.name, true)
                                     }
                                     else if (variant.name.contains("product", true)) {
                                         mDingExtension?.productApkName = output.outputFile.name
-                                        writeApkName(output.outputFile.name, false)
+                                        writeApkName(project, output.outputFile.name, false)
                                     }
                                     else {
                                         mDingExtension?.testApkName = output.outputFile.name
-                                        writeApkName(output.outputFile.name, true)
+                                        writeApkName(project, output.outputFile.name, true)
                                     }
                                 }
                             }

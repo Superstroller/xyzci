@@ -13,8 +13,7 @@ private val mFileName = "apkname.properties"
 fun clearApkName(project : Project, ext : JenkinsExtension?) {
     ext?.apply {
         try {
-            val fileDir = File(project.rootDir, workspacePath)
-            mFile = File(fileDir, mFileName)
+            mFile = File(project.rootDir, mFileName)
             mFile?.takeIf { it.exists() }?.let {
                 val fileWriter = FileWriter(it)
                 fileWriter.write("")
@@ -25,9 +24,13 @@ fun clearApkName(project : Project, ext : JenkinsExtension?) {
     }
 }
 
-fun writeApkName(name : String, isTest : Boolean) {
-    mFile?.takeIf { it.exists() }?.let {
-        val fileWriter = FileWriter(it)
+fun writeApkName(project: Project, name : String, isTest : Boolean) {
+    mFile = mFile?:File(project.rootDir, mFileName)
+    mFile?.let {
+        if (!it.exists()) {
+            it.createNewFile()
+        }
+        val fileWriter = FileWriter(it, true)
         fileWriter.write(if (isTest) "test:${name}\n" else "product:${name}\n")
         fileWriter.close()
     }
@@ -48,8 +51,8 @@ fun downloadApkNameFile(project: Project, ext : JenkinsExtension?, isTest: Boole
             val file = File(dir, mFileName)
             file.takeIf { it.exists() }?.let {
                 it.delete()
-                it.createNewFile()
             }
+            file.createNewFile()
             val fos = FileOutputStream(file)
             response.body()?.byteStream()?.let { ins ->
                 var sum = 0
@@ -75,8 +78,7 @@ fun downloadApkNameFile(project: Project, ext : JenkinsExtension?, isTest: Boole
 fun readApkName(project: Project, ext : JenkinsExtension?, isTest: Boolean) : String? {
     ext?.apply {
         try {
-            val fileDir = File(project.rootDir, workspacePath)
-            mFile = File(fileDir, mFileName)
+            mFile = File(project.rootDir, mFileName)
             mFile?.takeIf { it.exists() }?.let {
                 val fileReader = FileReader(mFile)
                 val br = BufferedReader(fileReader)
@@ -117,9 +119,6 @@ fun downloadApk(project : Project, ext : JenkinsExtension, apkName : String, isT
             if (!dir.exists()) {
                 dir.mkdirs()
             }
-            dir.listFiles().forEach {
-                if (it.isFile) it.delete()
-            }
             val apkFile = File(dir, apkName)
             if (apkFile.exists()) apkFile.delete()
             apkFile.createNewFile()
@@ -143,4 +142,5 @@ fun downloadApk(project : Project, ext : JenkinsExtension, apkName : String, isT
             println(if (isTest) "downloadTestApk failed" else "downloadProductApk failed")
         }
     }
+
 }
