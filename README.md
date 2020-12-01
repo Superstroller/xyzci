@@ -1,8 +1,10 @@
 # xyzci
-目前公司内Android工程的持续集成都可以用该插件优化
+目前公司内Android工程的持续集成都可以用该插件优化。
 
 ## Description
-上传代码后，可以通过gradle task直接本地触发远程构建，并且构建成功后自动发送钉钉消息到群里，可直接在钉钉群里点击下载apk
+提交代码后，可以通过gradle buildApk直接本地触发远程构建，并且构建成功后自动发送钉钉消息到群里。收到消息后可直接在钉钉群里点击消息下载apk，
+也可以通过downloadProductApk和downloadTestApk这两个任务下载服务器上的apk，apk会被下载到outapks目录下。
+插件会生成三个任务，在Android Studio右侧gradle视图窗口Tasks目录下的jenkins组中：buildApk, downloadProductApk, downloadTestApk, 可直接点击启动任务。
 
 ## Adding to project
 ```groovy
@@ -47,4 +49,4 @@ ding {
 }
 ```
 
-Finally, use the task `buildApk` to trigger a building in the remote jenkins server.
+Finally, use the task `buildApk` to trigger a building in the remote jenkins server, the task downloadProductApk and downloadTestApk to download the apk generated in the jenkins server.
