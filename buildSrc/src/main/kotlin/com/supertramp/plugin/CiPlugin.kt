@@ -65,17 +65,26 @@ class CiPlugin : Plugin<Project> {
                             mDingExtension?.apkVersion = variant.versionName
                             variant.outputs.forEach { output ->
                                 if (output.outputFile != null && output.outputFile.name.endsWith("apk")) {
-                                    if (variant.name.contains("test", true)) {
-                                        mDingExtension?.testApkName = output.outputFile.name
-                                        writeApkName(project, output.outputFile.name, true)
-                                    }
-                                    else if (variant.name.contains("product", true)) {
-                                        mDingExtension?.productApkName = output.outputFile.name
-                                        writeApkName(project, output.outputFile.name, false)
-                                    }
-                                    else {
-                                        mDingExtension?.testApkName = output.outputFile.name
-                                        writeApkName(project, output.outputFile.name, true)
+                                    val fileName = output.outputFile.name
+                                    when {
+                                        fileName.contains("test", true) -> {
+                                            mDingExtension?.testApkName = fileName
+                                            writeApkName(project, fileName, true)
+                                            val productApkName = fileName.replace("Test", "Product")
+                                            mDingExtension?.productApkName = productApkName
+                                            writeApkName(project, productApkName, false)
+                                        }
+                                        fileName.contains("product", true) -> {
+                                            mDingExtension?.productApkName = fileName
+                                            writeApkName(project, fileName, false)
+                                            val testApkName = fileName.replace("Product", "Test")
+                                            mDingExtension?.testApkName = testApkName
+                                            writeApkName(project, testApkName, true)
+                                        }
+                                        else -> {
+                                            mDingExtension?.testApkName = fileName
+                                            writeApkName(project, output.outputFile.name, true)
+                                        }
                                     }
                                 }
                             }
@@ -125,7 +134,6 @@ class CiPlugin : Plugin<Project> {
     //下载构建产物apk
     private fun downloadApkFromJenkins(project : Project, isTest : Boolean) {
         downloadApkNameFile(project, mJenkinsExtension, isTest)
-
     }
 
     //发送钉钉机器人通知
@@ -135,7 +143,11 @@ class CiPlugin : Plugin<Project> {
             dingTalk.msgtype= "actionCard"
             val actionCard = ActionCardBean()
             actionCard.btnOrientation = "1"
-            actionCard.text = "### $appName \n #### 版本${apkVersion}"
+            val builder = StringBuilder("### $appName \n #### 版本 ${apkVersion}")
+            if (jenkinsUsername.isNotEmpty() && jenkinsPassword.isNotEmpty()) {
+                builder.append("\n #### 用户名 ${jenkinsUsername}\n #### 密码 ${jenkinsPassword}")
+            }
+            actionCard.text = builder.toString()
             val btns = ArrayList<ActionBtnBean>()
             if (testApkName.isNotEmpty()) {
                 val btn = ActionBtnBean()

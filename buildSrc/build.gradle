@@ -21,19 +21,6 @@ tasks.withType(Javadoc) {
 }
 
 apply plugin : 'kotlin'
-apply plugin : 'maven'
-apply plugin : 'com.novoda.bintray-release'
-
-group = 'com.github.Superstroller'
-
-publish {
-    userOrg = 'supertramp229'//用户名
-    groupId = 'com.supertramp.plugin'//jcenter上的路径
-    artifactId = 'xyzci'//项目名称
-    publishVersion = '1.3'//版本号
-    desc = 'Continuous integration plugin for my company\'s projects'
-    website = 'https://github.com/Superstroller/CiPlugin'
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -49,11 +36,26 @@ dependencies {
     implementation gradleApi()
 }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        repository(url : uri('../repo'))
-        pom.groupId = 'com.supertramp.plugin'
-        pom.artifactId = 'xyzci'
-        pom.version = '1.3'
+apply from: 'publish.gradle'
+
+allprojects {
+    repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        maven {
+            credentials {
+                username '615fdcfc9b9269d05014a2ad'
+                password 'KS)701oIeT6]'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2144355-release-anxxrx/'
+        }
+        maven {
+            credentials {
+                username '615fdcfc9b9269d05014a2ad'
+                password 'KS)701oIeT6]'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2144355-snapshot-pczTqP/'
+        }
     }
 }

@@ -1,11 +1,35 @@
-apply plugin : 'com.novoda.bintray-release'
+apply plugin : 'maven'
 
-publish {
-    userOrg = 'supertramp229'//用户名
-    groupId = 'com.supertramp.plugin'//jcenter上的路径
-    artifactId = 'xyzci'//项目名称
-    publishVersion = '1.1'//版本号
-    desc = 'Continuous integration plugin for my company\'s projects'//描述
+def group = 'com.supertramp.plugin'
+def version = '1.0'
+def artifactId = 'xyzci'
+//uploadArchives {
+//    repositories.mavenDeployer {
+//        repository(url : uri('../repo'))
+//        pom.groupId = '$project.group'
+//        pom.artifactId = '$artifactId'
+//        pom.version = '$project.version'
+//    }
+//}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'https://packages.aliyun.com/maven/repository/2144355-release-anxxrx/') {
+                authentication(
+                        userName: '615fdcfc9b9269d05014a2ad',
+                        password: 'KS)701oIeT6]'
+                )
+            }
+            snapshotRepository(url: 'https://packages.aliyun.com/maven/repository/2144355-snapshot-pczTqP/') {
+                authentication(
+                        userName: '615fdcfc9b9269d05014a2ad',
+                        password: 'KS)701oIeT6]'
+                )
+            }
+            pom.version = version
+            pom.artifactId = artifactId
+            pom.groupId = group
+        }
+    }
 }
-
-//gradle clean build bintrayUpload -PbintrayUser=Supertramp229 -PbintrayKey=25e47256140c621285697687fde130bfe6292d9c -PdryRun=false

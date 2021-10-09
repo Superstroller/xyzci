@@ -13,5 +13,7 @@ open class DingExtension {
     var atUser : String = ""//需要at的用户
     var atAll : Boolean = false
     var atMsg : String = "最新包"
+    var jenkinsUsername : String = ""
+    var jenkinsPassword : String = ""
 
 }
