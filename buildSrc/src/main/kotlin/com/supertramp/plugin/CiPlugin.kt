@@ -9,10 +9,14 @@ import com.supertramp.plugin.ding.DingTalkBean
 import com.supertramp.plugin.ding.TextBean
 import com.supertramp.plugin.ext.DingExtension
 import com.supertramp.plugin.ext.JenkinsExtension
+import com.supertramp.plugin.ext.MappingExtension
 import okhttp3.*
 import org.apache.commons.codec.binary.Base64.encodeBase64
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
 import java.lang.StringBuilder
 import java.net.URLEncoder
 import javax.crypto.Mac
@@ -23,12 +27,14 @@ class CiPlugin : Plugin<Project> {
 
     private var mDingExtension : DingExtension? = null
     private var mJenkinsExtension : JenkinsExtension? = null
+    private var mMappingExtension : MappingExtension? = null
     private val mGradleArgs = StringBuilder()
     private val mGson = Gson()
 
     override fun apply(project : Project) {
         mJenkinsExtension = project.extensions.create("jenkins", JenkinsExtension::class.java)
         mDingExtension = project.extensions.create("ding", DingExtension::class.java)
+        mMappingExtension = project.extensions.create("mapping", MappingExtension::class.java)
 
         val requests = project.gradle.startParameter.taskRequests
         if (requests.size == 0) return
@@ -42,6 +48,9 @@ class CiPlugin : Plugin<Project> {
         project.gradle.buildFinished {
             mDingExtension?.takeIf { it.enable }?.let {
                 sendRobotMsg()
+            }
+            mMappingExtension?.takeIf { it.enable }?.let {
+                uploadMapping(it)
             }
         }
     }
@@ -91,6 +100,9 @@ class CiPlugin : Plugin<Project> {
                         }
                     }
                 }
+            }
+            if (!project.rootProject.hasProperty("mapping")) {
+                mMappingExtension?.enable = false
             }
         }
     }
@@ -211,6 +223,38 @@ class CiPlugin : Plugin<Project> {
         val signData = mac.doFinal(stringToSign.toByteArray(Charsets.UTF_8))
         val sign =  URLEncoder.encode(String(encodeBase64(signData)),"UTF-8")
         return "&timestamp=${timestamp}&sign=$sign"
+    }
+
+    //上传mapping文件到bugly服务器
+    private fun uploadMapping(mapping : MappingExtension) {
+        if (mapping.enable &&
+            File(mapping.buglyJarPath).exists() &&
+            File(mapping.mappingPath).exists()) {
+            val process = Runtime.getRuntime().exec("${mapping.javaPath} " +
+                    "-jar ${mapping.buglyJarPath} " +
+                    "-appid ${mapping.appId} " +
+                    "-appkey ${mapping.appKey} " +
+                    "-bundleid ${mapping.pkgName} " +
+                    "-version ${mapping.appVersion} " +
+                    "-platform Android " +
+                    "-inputMapping ${mapping.mappingPath}")
+            process?.waitFor()
+            printCmdResult(process)
+        }
+    }
+
+    //打印命令执行结果
+    private fun printCmdResult(process: Process) {
+        try {
+            val br = BufferedReader(InputStreamReader(process.inputStream))
+            val sb = StringBuffer()
+            var line : String?
+            while (br.readLine().also { line = it } != null) {
+                sb.append(line).append("\n")
+            }
+            val result = sb.toString()
+            println(result)
+        }catch (e : Exception) {}
     }
 
 }
