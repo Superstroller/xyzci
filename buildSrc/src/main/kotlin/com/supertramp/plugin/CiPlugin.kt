@@ -79,16 +79,20 @@ class CiPlugin : Plugin<Project> {
                                         fileName.contains("test", true) -> {
                                             mDingExtension?.testApkName = fileName
                                             writeApkName(project, fileName, true)
-                                            val productApkName = fileName.replace("Test", "Product")
-                                            mDingExtension?.productApkName = productApkName
-                                            writeApkName(project, productApkName, false)
+//                                            val productApkName = fileName.replace("Test", "Product")
+//                                            mDingExtension?.productApkName = productApkName
+//                                            writeApkName(project, productApkName, false)
                                         }
                                         fileName.contains("product", true) -> {
                                             mDingExtension?.productApkName = fileName
                                             writeApkName(project, fileName, false)
-                                            val testApkName = fileName.replace("Product", "Test")
-                                            mDingExtension?.testApkName = testApkName
-                                            writeApkName(project, testApkName, true)
+                                            if (project.rootProject.hasProperty("testBuildTime")) {
+                                                val testBuildTime = project.rootProject.property("testBuildTime").toString()
+                                                val testApkName = fileName.replace("Product", "Test")
+                                                val index = testApkName.lastIndexOf('_')
+                                                mDingExtension?.testApkName = testApkName.replaceRange(index - 15, index, testBuildTime)
+                                                writeApkName(project, testApkName, true)
+                                            }
                                         }
                                         else -> {
                                             mDingExtension?.testApkName = fileName
@@ -108,32 +112,45 @@ class CiPlugin : Plugin<Project> {
     }
 
     private fun createTasks(project : Project) {
-        project.tasks.create("buildApk") {
+        project.tasks.create("buildAllApk") {
             it.group = "jenkins"
             it.doLast {
-                triggerBuild()
+                triggerBuild("all")
+            }
+        }
+        project.tasks.create("buildTestApk") {
+            it.group = "jenkins"
+            it.doLast {
+                triggerBuild("test")
             }
         }
 
-        project.tasks.create("downloadTestApk") {
+        project.tasks.create("buildProductApk") {
             it.group = "jenkins"
             it.doLast {
-                downloadApkFromJenkins(project, true)
+                triggerBuild("product")
             }
         }
 
-        project.tasks.create("downloadProductApk") {
-            it.group = "jenkins"
-            it.doLast {
-                downloadApkFromJenkins(project, false)
-            }
-        }
+//        project.tasks.create("downloadTestApk") {
+//            it.group = "jenkins"
+//            it.doLast {
+//                downloadApkFromJenkins(project, true)
+//            }
+//        }
+//
+//        project.tasks.create("downloadProductApk") {
+//            it.group = "jenkins"
+//            it.doLast {
+//                downloadApkFromJenkins(project, false)
+//            }
+//        }
     }
 
     //触发构建
-    private fun triggerBuild() {
+    private fun triggerBuild(buildType : String) {
         mJenkinsExtension?.apply {
-            val url = "${remotePath}build?token=$triggerToken"
+            val url = "${remotePath}buildWithParameters?token=$triggerToken&${triggerParam}=${buildType}"
             val credential = Credentials.basic(userName, apiToken)
             val request = Request.Builder()
                 .url(url)
@@ -155,9 +172,9 @@ class CiPlugin : Plugin<Project> {
             dingTalk.msgtype= "actionCard"
             val actionCard = ActionCardBean()
             actionCard.btnOrientation = "1"
-            val builder = StringBuilder("### $appName \n #### 版本 ${apkVersion}")
+            val builder = StringBuilder("### $appName \n #### 版本 $apkVersion")
             if (jenkinsUsername.isNotEmpty() && jenkinsPassword.isNotEmpty()) {
-                builder.append("\n #### 用户名 ${jenkinsUsername}\n #### 密码 ${jenkinsPassword}")
+                builder.append("\n #### 用户名 ${jenkinsUsername}\n #### 密码 $jenkinsPassword")
             }
             actionCard.text = builder.toString()
             val btns = ArrayList<ActionBtnBean>()
